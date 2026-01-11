@@ -14,3 +14,4 @@ build/
 .vscode/
 .my_numbers/
 .winning_numbers/
+.python-version
