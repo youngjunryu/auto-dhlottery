@@ -1,6 +1,11 @@
 import os
+from datetime import datetime
+from pathlib import Path
+
 from dotenv import load_dotenv
 from playwright.sync_api import Page, sync_playwright
+
+from send_email import send_purchase_capture
 
 load_dotenv()
 
@@ -9,6 +14,8 @@ DHLOTTERY_PASSWORD = os.getenv('DHLOTTERY_PASSWORD')
 
 MAIN_URL = 'https://www.dhlottery.co.kr/'
 VIEWPORT = {'width': 1280, 'height': 720}
+MY_NUMBERS_DIR = Path(__file__).parent / 'my_numbers'
+MY_NUMBERS_DIR.mkdir(exist_ok=True)
 
 SELECTORS = {
     'main_login_button': 'button#loginBtn',
@@ -71,13 +78,13 @@ def main():
     print('🚀 동행복권 로그인 시작...')
 
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=False)
+        browser = playwright.chromium.launch(headless=True)
         context = browser.new_context(viewport=VIEWPORT)
         page = context.new_page()
 
         try:
             print('📄 동행복권 메인 페이지로 이동 중...')
-            page.goto(MAIN_URL, wait_until='networkidle')
+            page.goto(MAIN_URL, wait_until='networkidle', timeout=60000)
 
             print('🔍 메인 페이지 로그인 버튼 클릭 시도...')
             _wait_and_click(page, SELECTORS['main_login_button'], '메인 페이지 로그인 버튼 클릭')
@@ -134,9 +141,22 @@ def main():
 
                 print('5️⃣  팝업 확인 버튼 클릭 중...')
                 frame_target.wait_for_selector(SELECTORS['popup_confirm'], timeout=2000)
-                # frame_target.click(SELECTORS['popup_confirm'])
+                #frame_target.click(SELECTORS['popup_confirm'])
                 print(f'✅ (프레임) 팝업 확인 버튼 클릭 완료! (선택자: {SELECTORS["popup_confirm"]})')
                 frame_target.wait_for_timeout(1000)
+
+                print('⌛ 결과 페이지 로딩을 기다리는 중입니다...')
+                try:
+                    new_page.wait_for_load_state('networkidle', timeout=15000)
+                except Exception:
+                    print('ℹ️ networkidle 대기 타임아웃 발생. domcontentloaded 상태를 기다립니다...')
+                    new_page.wait_for_load_state('domcontentloaded', timeout=15000)
+                new_page.wait_for_timeout(2000)
+
+                screenshot_filename = f'my_numbers_{datetime.now().strftime("%Y%m%d_%H%M%S")}.png'
+                screenshot_path = MY_NUMBERS_DIR / screenshot_filename
+                new_page.screenshot(path=str(screenshot_path), full_page=True)
+                print(f'🖼️  팝업 확인 후 페이지 스크린샷 저장 완료: {screenshot_path}')
 
                 print('✅ 모든 단계 완료!')
                 print('⏸️  새 창을 5초간 열어둡니다...')
@@ -152,8 +172,11 @@ def main():
             print('⏸️  디버깅을 위해 브라우저를 5초간 열어둡니다...')
             page.wait_for_timeout(5000)
         finally:
+            context.close()
+            browser.close()
             print('👋 완료')
 
 
 if __name__ == '__main__':
     main()
+    send_purchase_capture()

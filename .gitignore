@@ -12,3 +12,5 @@ __pycache__/
 dist/
 build/
 .vscode/
+.my_numbers/
+.winning_numbers/
