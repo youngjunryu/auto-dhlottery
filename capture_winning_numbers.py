@@ -3,7 +3,7 @@ from pathlib import Path
 
 from playwright.sync_api import TimeoutError, sync_playwright
 
-from send_email import send_winning_numbers_capture
+from send_telegram import send_winning_numbers_capture
 
 NAVER_URL = "https://www.naver.com"
 SEARCH_TERM = "로또당첨번호"

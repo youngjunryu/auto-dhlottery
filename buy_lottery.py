@@ -5,7 +5,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from playwright.sync_api import Page, sync_playwright
 
-from send_email import send_purchase_capture
+from send_telegram import send_purchase_capture
 
 load_dotenv()
 
