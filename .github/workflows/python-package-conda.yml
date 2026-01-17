@@ -26,6 +26,9 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
+      - name: Install Playwright browsers
+        run: python -m playwright install --with-deps chromium
+
       - name: Run buy_lottery.py
         env:
           DHLOTTERY_USERNAME: ${{ secrets.DHLOTTERY_USERNAME }}
@@ -49,6 +52,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Install Playwright browsers
+        run: python -m playwright install --with-deps chromium
 
       - name: Run capture_winning_numbers.py
         env:
