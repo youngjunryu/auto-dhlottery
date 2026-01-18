@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).parent
 MY_NUMBERS_DIR = BASE_DIR / "my_numbers"
 WINNING_NUMBERS_DIR = BASE_DIR / "winning_numbers"
 
-MY_NUMBERS_PATTERN = "my_numbers*.png"
+MY_NUMBERS_PATTERN = "my_numbers_*.png"
 WINNING_CONTENT_PATTERN = "winning_numbers_*.png"
 
 CAPTURE_TARGETS: dict[str, tuple[Path, str, str]] = {
