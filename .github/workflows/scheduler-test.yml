@@ -10,6 +10,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  buy:
+    if: github.event.schedule == '0 0 * * 6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Install Playwright browsers
+        run: python -m playwright install --with-deps chromium
+
+      - name: Run buy_lottery.py
+        env:
+          DHLOTTERY_USERNAME: ${{ secrets.DHLOTTERY_USERNAME }}
+          DHLOTTERY_PASSWORD: ${{ secrets.DHLOTTERY_PASSWORD }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python buy_lottery.py
+        
   capture:
     runs-on: ubuntu-latest
     timeout-minutes: 15
