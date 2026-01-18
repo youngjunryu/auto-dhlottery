@@ -12,6 +12,9 @@ concurrency:
 jobs:
   capture:
     runs-on: ubuntu-latest
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +32,4 @@ jobs:
         run: python -m playwright install --with-deps chromium
 
       - name: Run capture_winning_numbers.py
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python capture_winning_numbers.py
