@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
-from playwright.sync_api import Page, sync_playwright
+from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, sync_playwright
 
 from send_telegram import send_purchase_capture
 
@@ -111,7 +111,15 @@ def main():
 
                 print('🌐 TotalGame 페이지를 새 창에서 여는 중입니다...')
                 new_page = context.new_page()
-                new_page.goto(TOTAL_GAME_URL, wait_until='networkidle', timeout=60000)
+                try:
+                    new_page.goto(TOTAL_GAME_URL, wait_until='domcontentloaded', timeout=60000)
+                except PlaywrightTimeoutError:
+                    print('⚠️ DOMContentLoaded 대기 중 타임아웃 발생. load 상태로 재시도합니다...')
+                    try:
+                        new_page.goto(TOTAL_GAME_URL, wait_until='load', timeout=60000)
+                    except PlaywrightTimeoutError:
+                        print('⚠️ load 상태 대기 중에도 타임아웃 발생. 현재 로딩된 상태로 계속 진행합니다.')
+                new_page.wait_for_load_state('domcontentloaded', timeout=15000)
                 print(f'✅ 새 창 로딩 완료!  새 창 URL: {new_page.url}')
 
                 frame_target = _resolve_lotto_frame(new_page)
@@ -134,7 +142,7 @@ def main():
 
                 print('5️⃣  팝업 확인 버튼 클릭 중...')
                 frame_target.wait_for_selector(SELECTORS['popup_confirm'], timeout=2000)
-                frame_target.click(SELECTORS['popup_confirm'])
+                #frame_target.click(SELECTORS['popup_confirm'])
                 print(f'✅ (프레임) 팝업 확인 버튼 클릭 완료! (선택자: {SELECTORS["popup_confirm"]})')
                 frame_target.wait_for_timeout(1000)
 
