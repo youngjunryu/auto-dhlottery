@@ -142,7 +142,7 @@ def main():
 
                 print('5️⃣  팝업 확인 버튼 클릭 중...')
                 frame_target.wait_for_selector(SELECTORS['popup_confirm'], timeout=2000)
-                #frame_target.click(SELECTORS['popup_confirm'])
+                frame_target.click(SELECTORS['popup_confirm'])
                 print(f'✅ (프레임) 팝업 확인 버튼 클릭 완료! (선택자: {SELECTORS["popup_confirm"]})')
                 frame_target.wait_for_timeout(1000)
 
