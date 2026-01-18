@@ -13,6 +13,7 @@ DHLOTTERY_USERNAME = os.getenv('DHLOTTERY_USERNAME')
 DHLOTTERY_PASSWORD = os.getenv('DHLOTTERY_PASSWORD')
 
 MAIN_URL = 'https://www.dhlottery.co.kr/'
+TOTAL_GAME_URL = 'https://el.dhlottery.co.kr/game/TotalGame.jsp?LottoId=LO40'
 VIEWPORT = {'width': 1280, 'height': 720}
 MY_NUMBERS_DIR = Path(__file__).parent / 'my_numbers'
 MY_NUMBERS_DIR.mkdir(exist_ok=True)
@@ -108,17 +109,9 @@ def main():
                 print('✅ 로그인 성공!')
                 page.wait_for_timeout(2000)
 
-                try:
-                    page.wait_for_selector(SELECTORS['lotto_button'], timeout=10000)
-                    print('✅ 로또6/45 버튼이 페이지에 나타났습니다.')
-                except Exception:
-                    print('⚠️  로또6/45 버튼을 기다리는 중 타임아웃. 계속 진행합니다...')
-
-                with context.expect_page() as new_page_info:
-                    _wait_and_click(page, SELECTORS['lotto_button'], '로또6/45 버튼 클릭', timeout=10000)
-
-                new_page = new_page_info.value
-                new_page.wait_for_load_state('networkidle')
+                print('🌐 TotalGame 페이지를 새 창에서 여는 중입니다...')
+                new_page = context.new_page()
+                new_page.goto(TOTAL_GAME_URL, wait_until='networkidle', timeout=60000)
                 print(f'✅ 새 창 로딩 완료!  새 창 URL: {new_page.url}')
 
                 frame_target = _resolve_lotto_frame(new_page)
