@@ -1,11 +1,13 @@
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import quote_plus
 
 from playwright.sync_api import TimeoutError, sync_playwright
 
 from send_telegram import send_winning_numbers_capture
 
 NAVER_URL = "https://www.naver.com"
+NAVER_SEARCH_BASE_URL = "https://search.naver.com/search.naver"
 SEARCH_TERM = "로또당첨번호"
 VIEWPORT = {"width": 1280, "height": 720}
 WINNING_NUMBERS_DIR = Path(__file__).parent / "winning_numbers"
@@ -14,20 +16,27 @@ WINNING_NUMBERS_DIR.mkdir(exist_ok=True)
 NAVIGATION_WAIT_STATES = ("networkidle", "load", "domcontentloaded")
 NAVIGATION_TIMEOUT = 60_000
 
-SEARCH_INPUT_SELECTOR = "input[name=\"query\"]"
 CONTENT_AREA_SELECTOR = "div.content_area"
 
 
-def navigate_to_naver(page) -> None:
+def build_search_url(term: str = SEARCH_TERM) -> str:
+    encoded_term = quote_plus(term)
+    return f"{NAVER_SEARCH_BASE_URL}?query={encoded_term}"
+
+
+def navigate_to_search_results(page, term: str = SEARCH_TERM) -> None:
+    search_url = build_search_url(term)
     for attempt, wait_state in enumerate(NAVIGATION_WAIT_STATES, start=1):
         try:
-            print(f"🚀 네이버 페이지로 이동 중... (시도 {attempt}/{len(NAVIGATION_WAIT_STATES)} | 조건: {wait_state})")
-            page.goto(NAVER_URL, wait_until=wait_state, timeout=NAVIGATION_TIMEOUT)
+            print(
+                f"🚀 네이버 검색 결과 페이지로 이동 중... (시도 {attempt}/{len(NAVIGATION_WAIT_STATES)} | 조건: {wait_state})"
+            )
+            page.goto(search_url, wait_until=wait_state, timeout=NAVIGATION_TIMEOUT)
         except TimeoutError:
             if attempt == len(NAVIGATION_WAIT_STATES):
-                print("❌ 네이버 페이지 이동에 반복적으로 실패했습니다.")
+                print("❌ 네이버 검색 결과 페이지 이동에 반복적으로 실패했습니다.")
                 raise
-            print("🔁 네이버 페이지 이동이 지연되고 있습니다. 다른 조건으로 다시 시도합니다...")
+            print("🔁 검색 결과 페이지 로딩이 지연되고 있습니다. 다른 조건으로 다시 시도합니다...")
         else:
             return
 
@@ -43,14 +52,7 @@ def capture_naver_search(term: str = SEARCH_TERM) -> Path:
         context = browser.new_context(viewport=VIEWPORT)
         page = context.new_page()
 
-        navigate_to_naver(page)
-
-        print("⌛ 검색창 로딩 대기 중...")
-        page.wait_for_selector(SEARCH_INPUT_SELECTOR, timeout=10000)
-
-        print(f"⌨️  '{term}' 검색어 입력 중...")
-        page.fill(SEARCH_INPUT_SELECTOR, term)
-        page.keyboard.press("Enter")
+        navigate_to_search_results(page, term)
 
         print("🔍 검색 결과 페이지 로딩 대기 중...")
         try:
