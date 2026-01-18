@@ -11,8 +11,25 @@ VIEWPORT = {"width": 1280, "height": 720}
 WINNING_NUMBERS_DIR = Path(__file__).parent / "winning_numbers"
 WINNING_NUMBERS_DIR.mkdir(exist_ok=True)
 
+NAVIGATION_WAIT_STATES = ("networkidle", "load", "domcontentloaded")
+NAVIGATION_TIMEOUT = 60_000
+
 SEARCH_INPUT_SELECTOR = "input[name=\"query\"]"
 CONTENT_AREA_SELECTOR = "div.content_area"
+
+
+def navigate_to_naver(page) -> None:
+    for attempt, wait_state in enumerate(NAVIGATION_WAIT_STATES, start=1):
+        try:
+            print(f"🚀 네이버 페이지로 이동 중... (시도 {attempt}/{len(NAVIGATION_WAIT_STATES)} | 조건: {wait_state})")
+            page.goto(NAVER_URL, wait_until=wait_state, timeout=NAVIGATION_TIMEOUT)
+        except TimeoutError:
+            if attempt == len(NAVIGATION_WAIT_STATES):
+                print("❌ 네이버 페이지 이동에 반복적으로 실패했습니다.")
+                raise
+            print("🔁 네이버 페이지 이동이 지연되고 있습니다. 다른 조건으로 다시 시도합니다...")
+        else:
+            return
 
 
 def capture_naver_search(term: str = SEARCH_TERM) -> Path:
@@ -26,8 +43,7 @@ def capture_naver_search(term: str = SEARCH_TERM) -> Path:
         context = browser.new_context(viewport=VIEWPORT)
         page = context.new_page()
 
-        print("🚀 네이버 페이지로 이동 중...")
-        page.goto(NAVER_URL, wait_until="networkidle", timeout=60000)
+        navigate_to_naver(page)
 
         print("⌛ 검색창 로딩 대기 중...")
         page.wait_for_selector(SEARCH_INPUT_SELECTOR, timeout=10000)
