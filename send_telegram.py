@@ -86,6 +86,32 @@ def send_telegram_photo(photo_path: Path) -> None:
     print("✅ 텔레그램 전송 완료!")
 
 
+def send_telegram_message(text: str, parse_mode: str | None = None) -> None:
+    _ensure_credentials()
+
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    data = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": text,
+    }
+    if parse_mode:
+        data["parse_mode"] = parse_mode
+
+    resp = requests.post(url, data=data, timeout=30)
+
+    try:
+        payload = resp.json()
+    except Exception:
+        raise RuntimeError(
+            f"Telegram API 응답이 JSON이 아닙니다. status={resp.status_code}, text={resp.text}"
+        )
+
+    if not payload.get("ok"):
+        raise RuntimeError(f"Telegram 메시지 전송 실패: {payload}")
+
+    print("✉️ 텔레그램 메시지 전송 완료!")
+
+
 def _send_latest_capture(target: str) -> None:
     try:
         directory, pattern, label = CAPTURE_TARGETS[target]

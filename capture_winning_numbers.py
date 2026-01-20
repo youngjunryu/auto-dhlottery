@@ -4,7 +4,7 @@ from urllib.parse import quote_plus
 
 from playwright.sync_api import TimeoutError, sync_playwright
 
-from send_telegram import send_winning_numbers_capture
+from send_telegram import send_telegram_message, send_winning_numbers_capture
 
 NAVER_URL = "https://www.naver.com"
 NAVER_SEARCH_BASE_URL = "https://search.naver.com/search.naver"
@@ -72,9 +72,25 @@ def capture_naver_search(term: str = SEARCH_TERM) -> Path:
     return screenshot_path
 
 
+def notify_error(message: str) -> None:
+    send_telegram_message(
+        text=(
+            "⚠️ *캡쳐 실패 알림*\n"
+            "이번주 로또당첨번호 캡처 실행 중 오류가 발생했습니다.\n"
+            f"메시지: {message}"
+        ),
+        parse_mode="Markdown",
+    )
+
+
 def main() -> None:
-    screenshot = capture_naver_search()
-    print(f"📁 생성된 스크린샷: {screenshot}")
+    try:
+        screenshot = capture_naver_search()
+    except Exception as exc:
+        notify_error(str(exc))
+        raise
+    else:
+        print(f"📁 생성된 스크린샷: {screenshot}")
 
 
 if __name__ == "__main__":
